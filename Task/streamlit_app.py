@@ -3,8 +3,6 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import requests
-import os
-import google.generativeai as genai
 
 st.title("Titanic Dataset Chat Agent")
 
