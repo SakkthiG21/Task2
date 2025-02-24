@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import requests
 
 st.title("Titanic Dataset Chat Agent")
 
@@ -16,7 +15,8 @@ df = load_data()
 def get_gender_percentage():
     gender_counts = df['Sex'].value_counts(normalize=True) * 100
     male_percentage = gender_counts.get('male', 0)
-    return f"{male_percentage:.1f}% of passengers were male"
+    female_percentage = gender_counts.get('female', 0)
+    return f"Male passengers: {male_percentage:.1f}%, Female passengers: {female_percentage:.1f}%"
 
 def plot_age_histogram():
     fig = px.histogram(df, x='Age', title='Distribution of Passenger Ages')
@@ -32,6 +32,18 @@ def plot_embarkation_counts():
                 title='Passenger Count by Embarkation Port')
     return fig
 
+def get_children_count():
+    children = df[df['Age'] < 18]
+    return f"There were {len(children)} children on board the Titanic"
+
+def get_survival_stats():
+    survived = df['Survived'].value_counts()
+    return f"Survivors: {survived[1]} passengers, Did not survive: {survived[0]} passengers"
+
+def get_class_distribution():
+    class_counts = df['Pclass'].value_counts().sort_index()
+    return f"1st Class: {class_counts[1]} passengers\n2nd Class: {class_counts[2]} passengers\n3rd Class: {class_counts[3]} passengers"
+
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 
@@ -42,16 +54,29 @@ if st.button("Send"):
         st.session_state.chat_history.append({"role": "user", "content": query})
         
         try:
-            if "percentage" in query.lower() and "male" in query.lower():
+            if "children" in query.lower():
+                result = get_children_count()
+            elif "gender" in query.lower() or "male" in query.lower() or "female" in query.lower():
                 result = get_gender_percentage()
             elif "age" in query.lower() and "histogram" in query.lower():
                 result = plot_age_histogram()
-            elif "average" in query.lower() and "fare" in query.lower():
+            elif "fare" in query.lower():
                 result = get_average_fare()
-            elif "embark" in query.lower():
+            elif "embark" in query.lower() or "port" in query.lower():
                 result = plot_embarkation_counts()
+            elif "survive" in query.lower() or "survived" in query.lower():
+                result = get_survival_stats()
+            elif "class" in query.lower():
+                result = get_class_distribution()
             else:
-                result = "I can answer questions about passenger gender percentages, age distributions, average fares, and embarkation ports."
+                result = """I can answer questions about:
+                - Number of children on board
+                - Passenger gender distribution
+                - Age distribution (histogram)
+                - Average ticket fares
+                - Embarkation ports
+                - Survival statistics
+                - Passenger class distribution"""
             
             st.session_state.chat_history.append({"role": "assistant", "content": result})
             
